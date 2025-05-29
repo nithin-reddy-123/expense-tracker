@@ -13,7 +13,7 @@ cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
-    password BYTEA NOT NULL
+    password TEXT NOT NULL
 )
 """)
 

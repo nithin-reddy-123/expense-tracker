@@ -236,39 +236,43 @@ def expense_tracker():
         plot_expenses_charts(expenses, start_date, end_date)
 
 def login_page():
-    error_message=None
-    success_message=None
-    username = st.text_input("username",value="",max_chars=16,placeholder="Enter your username");
-    users = get_user_by_username(username)
-    password = st.text_input("password",max_chars=16,placeholder="Enter your password",type="password");
+    error_message = None
+    success_message = None
+
+    username = st.text_input("Username", value="", max_chars=16, placeholder="Enter your username").strip()
+    password = st.text_input("Password", max_chars=16, placeholder="Enter your password", type="password")
+
     st.write("Don't have an account already?")
-    col1,col2,col3 = st.columns([1,6,1])
+    col1, col2, col3 = st.columns([1, 6, 1])
+
     with col1:
         if st.button("Signup"):
             update_url("signup")
+
     with col3:
         if st.button("Login"):
-            result = get_user_by_username(username)
-            if result and bcrypt.checkpw(password.encode(), result[1].encode()):
-                st.session_state.user_id = result[0]
-                st.session_state.username = username
-                success_message = "Login successful"
+            if not username or not password:
+                error_message = "Please enter both username and password"
             else:
-                error_message = "Invalid username or password"
-    
+                result = get_user_by_username(username)
+                if result and bcrypt.checkpw(password.encode(), result[1].encode()):
+                    st.session_state.user_id = result[0]
+                    st.session_state.username = username
+                    update_url("expenses")
+                    st.rerun()
+                else:
+                    error_message = "Invalid username or password"
+
     if error_message:
         st.error(error_message)
-    if success_message:
-        update_url("expenses")
-        st.rerun()
-        st.success(success_message)
+
 
 
 
 def signup_page():
     error_message=None
     success_message=None
-    username = st.text_input("Choose username", key="signup_username")
+    username = st.text_input("Choose username", key="signup_username").strip()
     password = st.text_input("Choose password", type="password", key="signup_password")
     confirm = st.text_input("Confirm password", type="password", key="signup_confirm_password")
     col1,col2,col3 = st.columns([1,6,1])
@@ -277,12 +281,16 @@ def signup_page():
             update_url("login")
     with col3:
         if st.button("Register"):
-            if password!=confirm:
+            if not username or not password or not confirm:
+                error_message = "Please fill in all fields"
+            elif password != confirm:
                 error_message = "Passwords do not match"
+            elif len(password) < 6:
+                error_message = "Password must be at least 6 characters"
             else:
                 hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
                 try:
-                    insert_user(username,hashed_pw)
+                    insert_user(username, hashed_pw)
                     success_message = "Signup successful! Login now"
                 except sqlite3.IntegrityError:
                     error_message = "Username already exists"

@@ -6,3 +6,4 @@ langchain-groq
 bcrypt
 pytesseract
 plotly
+psycopg2-binary
