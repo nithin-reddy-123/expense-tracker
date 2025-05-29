@@ -1,50 +1,53 @@
-import sqlite3
-import bcrypt
+import psycopg2
+import streamlit as st
 
-# Connect to database (or create it if it doesn't exist)
-conn = sqlite3.connect("expenses.db", check_same_thread=False)
+# Get connection info from Streamlit secrets
+db_url = st.secrets["DB_URL"]
+
+# Connect to Neon PostgreSQL
+conn = psycopg2.connect(db_url)
 cursor = conn.cursor()
 
-# Create users table
+# Create tables with password as BYTEA for storing hashed binary data
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
+    password BYTEA NOT NULL
 )
 """)
 
-# Create expenses table
-cursor.execute("""            
+cursor.execute("""
 CREATE TABLE IF NOT EXISTS expenses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
     amount REAL,
     category TEXT,
     date TEXT,
-    description TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    description TEXT
 )
 """)
 
 conn.commit()
 
 def insert_user(username, password):
-    hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_pw))
+    # password is already hashed bytes from app.py
+    cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
     conn.commit()
 
-
 def get_user_by_username(username):
-    cursor.execute("SELECT id, password FROM users WHERE username = ?", (username,))
+    cursor.execute("SELECT id, password FROM users WHERE username = %s", (username,))
     return cursor.fetchone()
 
-def insert_expense(userId,amount,category,date,description):
-    cursor.execute("INSERT INTO expenses (user_id,amount,category,date,description) VALUES (?, ?, ?, ?, ?)", (userId,amount,category,date,description))
+def insert_expense(user_id, amount, category, date, description):
+    cursor.execute(
+        "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (%s, %s, %s, %s, %s)",
+        (user_id, amount, category, date, description)
+    )
     conn.commit()
 
 def get_expenses_by_user(user_id):
-    cursor.execute("SELECT * FROM expenses WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT * FROM expenses WHERE user_id = %s", (user_id,))
     return cursor.fetchall()
 
 def get_all_users():
