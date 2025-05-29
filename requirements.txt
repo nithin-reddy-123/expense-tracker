@@ -1,0 +1,8 @@
+streamlit
+langchain
+langchain-core
+openai
+langchain-groq
+bcrypt
+pytesseract
+plotly
