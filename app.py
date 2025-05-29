@@ -238,7 +238,6 @@ def expense_tracker():
 
 def login_page():
     error_message = None
-    success_message = None
 
     username = st.text_input("Username", value="", max_chars=16, placeholder="Enter your username").strip()
     password = st.text_input("Password", max_chars=16, placeholder="Enter your password", type="password")
@@ -249,7 +248,7 @@ def login_page():
     with col1:
         if st.button("Signup"):
             update_url("signup")
-
+            st.rerun()
     with col3:
         if st.button("Login"):
             if not username or not password:
@@ -280,6 +279,7 @@ def signup_page():
     with col1:
         if st.button("Back to Login"):
             update_url("login")
+            st.rerun()
     with col3:
         if st.button("Register"):
             if not username or not password or not confirm:
