@@ -32,6 +32,7 @@ page = st.query_params.get("page", "login")
 
 def update_url(new_url):
     st.query_params = {"page":new_url}
+    st.rerun()
 
 def extract_expense_from_text(text):
     today = date.today()
@@ -275,7 +276,7 @@ def signup_page():
     username = st.text_input("Choose username", key="signup_username").strip()
     password = st.text_input("Choose password", type="password", key="signup_password")
     confirm = st.text_input("Confirm password", type="password", key="signup_confirm_password")
-    col1,col2,col3 = st.columns([1,6,1])
+    col1,col2,col3 = st.columns([2,5,1.25])
     with col1:
         if st.button("Back to Login"):
             update_url("login")
