@@ -32,15 +32,18 @@ conn.commit()
 
 def insert_user(username, password):
     try:
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
+        cursor.execute(
+            "INSERT INTO users (username, password) VALUES (%s, %s)", 
+            (username, password)
+        )
         conn.commit()
     except psycopg2.IntegrityError:
         conn.rollback()
-        raise  # or return a custom error message
+        raise ValueError("Username is already taken!")  # ✅ raise an Exception object
     except Exception as e:
         conn.rollback()
         raise e
+
 
 
 def get_user_by_username(username):
