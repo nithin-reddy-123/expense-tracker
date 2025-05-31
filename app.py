@@ -293,8 +293,10 @@ def signup_page():
                 try:
                     insert_user(username, hashed_pw)
                     success_message = "Signup successful! Login now"
-                except sqlite3.IntegrityError:
+                except ValueError:
                     error_message = "Username already exists"
+                except Exception:
+                    error_message = "Something went wrong. Please try again."
     if error_message:
         st.error(error_message)
     if success_message:
