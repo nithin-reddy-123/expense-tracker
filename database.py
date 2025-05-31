@@ -31,9 +31,20 @@ CREATE TABLE IF NOT EXISTS expenses (
 conn.commit()
 
 def insert_user(username, password):
-    # password is already hashed bytes from app.py
-    cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
-    conn.commit()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
+        conn.commit()
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        raise  # or return a custom error message
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
+
 
 def get_user_by_username(username):
     cursor.execute("SELECT id, password FROM users WHERE username = %s", (username,))
