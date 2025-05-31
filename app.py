@@ -248,7 +248,7 @@ def login_page():
     with col1:
         if st.button("Signup"):
             update_url("signup")
-            st.rerun()
+            # st.rerun()
     with col3:
         if st.button("Login"):
             if not username or not password:
@@ -259,7 +259,7 @@ def login_page():
                     st.session_state.user_id = result[0]
                     st.session_state.username = username
                     update_url("expenses")
-                    st.rerun()
+                    # st.rerun()
                 else:
                     error_message = "Invalid username or password"
 
@@ -279,7 +279,7 @@ def signup_page():
     with col1:
         if st.button("Back to Login"):
             update_url("login")
-            st.rerun()
+            # st.rerun()
     with col3:
         if st.button("Register"):
             if not username or not password or not confirm:
