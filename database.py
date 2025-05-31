@@ -41,9 +41,6 @@ def insert_user(username, password):
     except Exception as e:
         conn.rollback()
         raise e
-    finally:
-        cursor.close()
-        conn.close()
 
 
 def get_user_by_username(username):
