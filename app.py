@@ -6,7 +6,6 @@ import re
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-from database import cursor
 from langchain_groq import ChatGroq
 from PIL import Image
 import pytesseract
