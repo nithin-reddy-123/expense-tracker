@@ -17,7 +17,7 @@ st.markdown("<h1 style='text-align: center;'>Expense tracker</h1>", unsafe_allow
 
 query_params = st.query_params
 
-# Your Groq API Key
+# Your Groq API Key stored in secrets file
 api_key = st.secrets["api"]["api_key"]
 
 # Setup LLM
@@ -32,6 +32,7 @@ page = st.query_params.get("page", "login")
 def update_url(new_url):
     st.query_params = {"page":new_url}
     st.rerun()
+
 
 def extract_expense_from_text(text):
     today = date.today()
@@ -78,16 +79,13 @@ def extract_expense_from_text(text):
         return None
 
 def plot_expenses_charts(expenses, start_date, end_date):
+
     if not expenses:
         st.warning("No expenses found")
         return
     
-    # Try to create DataFrame without specifying columns (assuming expenses is list of tuples/lists)
     df = pd.DataFrame(expenses)
     
-    # If you know your columns order, assign meaningful column names here:
-    # Adjust column names to match your data exactly
-    # For example, if expenses have 6 fields like (id, user_id, amount, category, date, description)
     if df.shape[1] == 6:
         df.columns = ["id", "user_id", "amount", "category", "date", "description"]
     elif df.shape[1] == 5:
@@ -97,24 +95,19 @@ def plot_expenses_charts(expenses, start_date, end_date):
         st.write(df.head())
         return
     
-    # Convert date column to datetime.date
     if df['date'].dtype == object:
         df['date'] = pd.to_datetime(df['date'], errors='coerce').dt.date
     
-    # Drop rows with invalid dates (NaT)
     df = df.dropna(subset=['date'])
     
-    # Filter by selected date range
     df_filtered = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
     
     if df_filtered.empty:
         st.warning("No expenses found in the selected date range")
         return
     
-    # Aggregate by date for bar chart
     df_bar = df_filtered.groupby('date')['amount'].sum().reset_index()
     
-    # Aggregate by category for pie chart
     df_pie = df_filtered.groupby('category')['amount'].sum().reset_index()
     
     st.subheader(f"Expenses from {start_date} to {end_date}")
@@ -170,12 +163,13 @@ def expense_tracker():
                             st.session_state.user_id,
                             float(expense_description_data["amount"]),
                             expense_description_data["category"],
-                            expense_description_data["date"],  # Ensure this is in date format
+                            expense_description_data["date"],  
                             expense_description_data["description"]
                     )
                     expenses = get_expenses_by_user(st.session_state.user_id)
                     print(f"expenses {expenses}")
                     st.success("Expense successfully added!")
+                    st.session_state.last_added_date = expense_description_data["date"]
                 except Exception as e:
                     st.error(f"Error inserting into database: {e}")
 
@@ -195,12 +189,14 @@ def expense_tracker():
                         st.session_state.user_id,
                         float(expense_data["amount"]),
                         expense_data["category"],
-                        expense_data["date"],  # Ensure this is in date format
+                        expense_data["date"], 
                         expense_data["description"]
                     )
                     expenses = get_expenses_by_user(st.session_state.user_id)
                     print(f"expenses {expenses}")
                     st.success("Expense successfully added!")
+                    st.session_state.last_added_date = expense_data["date"]
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Error inserting into database: {e}")
             
@@ -219,11 +215,16 @@ def expense_tracker():
             expenses = get_expenses_by_user(st.session_state.user_id)
             print(f"expenses {expenses}")
             st.success(f"Added: {description} | ₹{amount:.2f} | {expense_date} | Category: {category}")
+            st.session_state.last_added_date = expense_date
     st.header("View Expenses by Date Range")
 
     # Default dates: last 30 days
-    default_end = date.today()
-    default_start = default_end - pd.Timedelta(days=30)
+    today = date.today()
+    last_added_raw = st.session_state.get("last_added_date", today)
+    last_added = pd.to_datetime(last_added_raw).date() if isinstance(last_added_raw, str) else last_added_raw
+
+    default_start = min(today - timedelta(days=30), last_added)
+    default_end = today
 
     start_date = st.date_input("Start date", value=default_start)
     end_date = st.date_input("End date", value=default_end)
