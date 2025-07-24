@@ -85,6 +85,51 @@ def get_expenses_by_user(user_id):
         print("Error fetching expenses:", e)
         return []
 
+def delete_expense_by_id(expense_id):
+    try:
+        with psycopg2.connect(db_url) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM expenses WHERE expense_id = %s", (expense_id,))
+                return cursor.fetchall()
+    except Exception as e:
+        print("Error deleting expense:", e)
+        return []
+
+# Function to update an expense by ID
+def update_expense_by_id(expense_id, amount, category, date, description):
+    try:
+        with psycopg2.connect(db_url) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE expenses
+                    SET amount = %s,
+                        category = %s,
+                        date = %s,
+                        description = %s
+                    WHERE id = %s
+                """, (amount, category, date, description, expense_id))
+            conn.commit()
+    except Exception as e:
+        print("Error updating expense:", e)
+        return []
+
+def get_expense_id_by_description(description, user_id):
+    try:
+        with psycopg2.connect(db_url) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT id FROM expenses
+                    WHERE description = %s AND user_id = %s
+                    ORDER BY id DESC LIMIT 1
+                    """,
+                    (description, user_id)
+                )
+                result = cursor.fetchone()
+                return result[0] if result else None
+    except Exception as e:
+        print("Error fetching expense ID by description:", e)
+        return []
 
 # Function to get all users
 def get_all_users():
