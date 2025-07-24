@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+import platform
 import sqlite3
 import bcrypt
 import json
@@ -11,7 +12,8 @@ from PIL import Image
 import pytesseract
 from database import insert_user, get_user_by_username, insert_expense, get_expenses_by_user, get_all_users
 
-pytesseract.pytesseract.tesseract_cmd = "/opt/homebrew/bin/tesseract"
+if platform.system() == "Darwin":  # macOS local dev
+    pytesseract.pytesseract.tesseract_cmd = "/opt/homebrew/bin/tesseract"
 
 st.markdown("<h1 style='text-align: center;'>Expense tracker</h1>", unsafe_allow_html=True)
 
